@@ -12,11 +12,11 @@ import "./ERC165.sol";
 import "./AccessControl.sol";
 
 /** 
-TODO 
-1. Only allow admins to mint  
-2. delete burning 
-3. create batch airdropping function
- */
+* TODO 
+* 1. Only allow admins to mint  
+* 2. delete burning 
+* 3. create batch airdropping function
+*/
 
 /**
  * @dev Implementation of the basic standard multi-token.
@@ -40,11 +40,8 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
     bool private _transferAllowed;
     bool private _burnAllowed;
 
-    // Is this the best way to store admins
-    // Can we just use a gnosis wallet 
-    // Tiered admins 
-    // Adding and removing admins is multi sig 
-    address[] private admins; 
+    address[] private admins;
+    address private superAdmin;
 
     /**
      * @dev See {_setURI}.
@@ -340,6 +337,8 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
 
         _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
     }
+
+    // TODO: better to do the for loop offchain?
 
     function airdrop(
         address[] memory attendees, 
