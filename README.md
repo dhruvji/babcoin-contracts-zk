@@ -12,8 +12,7 @@ npx hardhat test
 npx hardhat node
 node scripts/sample-script.js
 npx hardhat help
-```
 
-Commands:
-Run script: `npx hardhat run scripts/test.js`
-Deploy: `npx hardhat run scripts/deploy.js --network mumbai`
+npx hardhat run scripts/test.js
+npx hardhat run scripts/deploy.js --network mumbai
+```
