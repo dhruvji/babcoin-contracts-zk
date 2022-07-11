@@ -1,24 +1,28 @@
 const babCoinURI = "TEMPORARY";
 
 const main = async () => {
-    const [owner, random1, random2] = await hre.ethers.getSigners();
+    const [owner, random1, random2, random3, random4] = await hre.ethers.getSigners();
 
     const babCoinContractFactory = await hre.ethers.getContractFactory('BabCoinContract');
-    const babCoinContract = await babCoinContractFactory.deploy(babCoinURI);
+    const babCoinContract = await babCoinContractFactory.deploy(babCoinURI, owner.address);
     await babCoinContract.deployed();
     console.log("Contract deployed to:", babCoinContract.address);
-    console.log("Contract deployed by:", owner.address);
+    console.log("Contract deployed by:", owner.address, "\n");
 
-
-    let txn = await babCoinContract.airdrop(
-        [random1.address, random2.address], 1, 1, ""
+    let txn = await babCoinContract.addAdmins(
+        [random1.address, random2.address, random3.address, random1.address]
     );
     await txn.wait();
+    let admins = await babCoinContract.getAdmins();
+    console.log("Admins:", admins);
 
-    const random1Balance = await babCoinContract.balanceOf(random1.address, 1);
-    console.log("Random Account #1 Balance:", random1Balance);
-    const random2Balance = await babCoinContract.balanceOf(random2.address, 1);
-    console.log("Random Account #2 Balance:", random2Balance);
+    txn = await babCoinContract.removeAdmins([random1.address, random3.address]);
+    await txn.wait();
+    admins = await babCoinContract.getAdmins();
+    console.log("Updated admins:", admins);
+
+    txn = await babCoinContract.connect(random4).addAdmins([random1.address]);
+    await txn.wait();
 }
 
 const runMain = async () => {

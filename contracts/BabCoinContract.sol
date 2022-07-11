@@ -9,7 +9,6 @@ import "./IERC1155MetadataURI.sol";
 import "./Address.sol";
 import "./Context.sol";
 import "./ERC165.sol";
-import "./AccessControl.sol";
 
 /** 
 * TODO 
@@ -25,7 +24,7 @@ import "./AccessControl.sol";
  *
  * _Available since v3.1._
  */
-contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI, AccessControl {
+contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
     using Address for address;
 
     // Mapping from token ID to account balances
@@ -43,19 +42,88 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI, Acce
     address[] private admins;
     address private superAdmin;
 
+    modifier onlySuperAdmin() {
+        require(msg.sender == superAdmin, "Not super admin");
+        _;
+    }
+
+    modifier onlyAdmin() {
+        bool isAdmin = msg.sender == superAdmin;
+        if (!isAdmin) {
+            for (uint i = 0; i < admins.length; i++) {
+                if (msg.sender == admins[i]) {
+                    isAdmin = true;
+                    break;
+                }
+            }
+        }
+        require(isAdmin, "Not admin");
+        _;
+    }
+
     /**
      * @dev See {_setURI}.
      */
-    constructor(string memory uri_) {
+    constructor(string memory uri_, address superAdmin_) {
         _setURI(uri_);
+        superAdmin = superAdmin_;
         _transferAllowed = false;
         _burnAllowed = false;
+    }
+
+    function getSuperAdmin() public view returns(address) {
+        return superAdmin;
+    }
+
+    function setSuperAdmin(address newSuperAdmin) public onlySuperAdmin {
+        superAdmin = newSuperAdmin;
+    }
+
+    function getAdmins() public view returns(address[] memory) {
+        return admins;
+    }
+
+    function addAdmins(address[] memory newAdmins) public onlySuperAdmin {
+        for (uint i = 0; i < newAdmins.length; i++) {
+            admins.push(newAdmins[i]);
+        }
+    }
+
+    function removeAdmins(address[] memory oldAdmins) public onlySuperAdmin {
+        for (uint i = 0; i < oldAdmins.length; i++) {
+            for (uint j = 0; j < admins.length; j++) {
+                if (oldAdmins[i] == admins[j]) {
+                    uint k = j;
+                    while (k < admins.length - 1) {
+                        admins[k] = admins[k + 1];
+                        k++;
+                    }
+                    admins.pop();
+                }
+            }
+        }
+    }
+
+    function setTransfer(bool status) public onlySuperAdmin {
+        _transferAllowed = status;
+    }
+
+    function setBurn(bool status) public onlySuperAdmin {
+        _burnAllowed = status;
+    }
+
+    function getTransfer() public view returns(bool) {
+        return _transferAllowed;
+    }
+
+    function getBurn() public view returns(bool) {
+        return _burnAllowed;
     }
 
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IERC1155).interfaceId ||
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
