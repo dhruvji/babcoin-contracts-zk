@@ -10,13 +10,6 @@ import "./Address.sol";
 import "./Context.sol";
 import "./ERC165.sol";
 
-/** 
-* TODO 
-* 1. Only allow admins to mint  
-* 2. delete burning 
-* 3. create batch airdropping function
-*/
-
 /**
  * @dev Implementation of the basic standard multi-token.
  * See https://eips.ethereum.org/EIPS/eip-1155
@@ -43,6 +36,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
     address private superAdmin;
 
     modifier onlySuperAdmin() {
+        //require(true);
         require(msg.sender == superAdmin, "Not super admin");
         _;
     }
@@ -57,6 +51,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
                 }
             }
         }
+        //require(true);
         require(isAdmin, "Not admin");
         _;
     }
@@ -334,7 +329,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * Because these URIs cannot be meaningfully represented by the {URI} event,
      * this function emits no events.
      */
-    function _setURI(string memory newuri) internal virtual {
+    function _setURI(string memory newuri) internal virtual onlySuperAdmin {
         _uri = newuri;
     }
 
@@ -354,7 +349,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) internal virtual {
+    ) internal virtual onlyAdmin {
         require(to != address(0), "ERC1155: mint to the zero address");
 
         address operator = _msgSender();
@@ -387,7 +382,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal virtual {
+    ) internal virtual onlyAdmin {
         require(to != address(0), "ERC1155: mint to the zero address");
         require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
 
@@ -406,17 +401,15 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
     }
 
-    // TODO: better to do the for loop offchain?
-
     function airdrop(
         address[] memory attendees, 
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) internal virtual {
-        for(uint i = 0; i < attendees.length; i++)
+    ) public onlyAdmin {
+        uint256 size = attendees.length;
+        for(uint i = 0; i < size; i++)
         {
-            // TODO: What is data representing?
             _mint(attendees[i], id, amount, data);
         }
     }

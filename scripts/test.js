@@ -1,4 +1,4 @@
-const babCoinURI = "TEMPORARY";
+const babCoinURI = "TEMPORARY URL EXTENDED LENGTH";
 
 const main = async () => {
     const [owner, random1, random2, random3, random4] = await hre.ethers.getSigners();
@@ -21,8 +21,8 @@ const main = async () => {
     admins = await babCoinContract.getAdmins();
     console.log("Updated admins:", admins);
 
-    txn = await babCoinContract.connect(random4).addAdmins([random1.address]);
-    await txn.wait();
+    //txn = await babCoinContract.connect(random4).addAdmins([random1.address]);
+    //await txn.wait();
 }
 
 const runMain = async () => {

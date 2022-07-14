@@ -1,8 +1,7 @@
 require("dotenv").config();
 require("@nomiclabs/hardhat-waffle");
+require("hardhat-gas-reporter");
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   const accounts = await hre.ethers.getSigners();
 
@@ -11,24 +10,28 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
-
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
-const DEPLOYER = process.env.PRIVATE_KEY;
-
 module.exports = {
   solidity: "0.8.10",
   networks: {
     mumbai: {
       url: process.env.MUMBAI_ALCHEMY_KEY,
-      accounts: [DEPLOYER]
+      accounts: [process.env.PRIVATE_KEY]
     },
     polygon: {
       url: process.env.POLYGON_ALCHEMY_KEY,
-      accounts: [DEPLOYER]
+      accounts: [process.env.PRIVATE_KEY]
     }
+  },
+  gasReporter: {
+    enabled: (process.env.REPORT_GAS) ? true : false,
+    coinmarketcap: process.env.COINMARKETCAP_KEY,
+    token: "MATIC",
+    currency: "USD"
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
   }
 };

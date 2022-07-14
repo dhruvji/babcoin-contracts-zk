@@ -1,4 +1,4 @@
-const babCoinURI = "TEMPORARY";
+const babCoinURI = "TEMPORARY URL EXTENDED LENGTH";
 
 const main = async () => {
     const babCoinContractFactory = await hre.ethers.getContractFactory('BabCoinContract');
