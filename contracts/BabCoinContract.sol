@@ -60,7 +60,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * @dev See {_setURI}.
      */
     constructor(string memory uri_, address superAdmin_) {
-        _setURI(uri_);
+        _uri = uri_;
         superAdmin = superAdmin_;
         _transferAllowed = false;
         _burnAllowed = false;
