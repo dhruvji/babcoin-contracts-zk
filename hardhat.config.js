@@ -27,11 +27,5 @@ module.exports = {
     coinmarketcap: process.env.COINMARKETCAP_KEY,
     token: "MATIC",
     currency: "USD"
-  },
-  paths: {
-    sources: "./contracts",
-    tests: "./test",
-    cache: "./cache",
-    artifacts: "./artifacts"
   }
 };
