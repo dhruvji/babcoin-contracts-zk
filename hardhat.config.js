@@ -14,12 +14,12 @@ module.exports = {
   solidity: "0.8.10",
   networks: {
     mumbai: {
-      url: process.env.MUMBAI_ALCHEMY_KEY,
-      accounts: [process.env.PRIVATE_KEY]
+      url: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.MUMBAI_ALCHEMY_KEY}`,
+      accounts: [process.env.TEST_PRIVATE_KEY]
     },
     polygon: {
-      url: process.env.POLYGON_ALCHEMY_KEY,
-      accounts: [process.env.PRIVATE_KEY]
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.POLYGON_ALCHEMY_KEY}`,
+      accounts: [process.env.DEPLOY_PRIVATE_KEY]
     }
   },
   gasReporter: {

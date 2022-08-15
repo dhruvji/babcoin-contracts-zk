@@ -1,6 +1,8 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
+const emptyData = "0x00000000000000000000000000000000000000000000000000000000000000";
+
 describe("BabCoinContract", function() {
     it("Basic Gas Test", async function() {
         const signers = await ethers.getSigners();
@@ -14,9 +16,9 @@ describe("BabCoinContract", function() {
             attendees.push(signers[i % signers.length].address);
             i++;
         }
-        await babCoinContract.airdrop(attendees, 1, 1, "0x00000000000000000000000000000000000000000000000000000000000000");
+        await babCoinContract.airdrop(attendees, 1, 1, emptyData);
 
         const balance = await babCoinContract.balanceOf(attendees[0], 1);
         expect(balance).to.equal(5);
-    })
+    });
 });
