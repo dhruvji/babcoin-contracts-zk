@@ -22,7 +22,7 @@ const main = async () => {
     //addresses, id, amount, additional data
     await babCoinContract.airdrop([superAdmin, wallet.address], 1, 1, emptyData);
     await babCoinContract.airdrop([superAdmin, wallet.address], 2, 1, emptyData);
-    console.log("Aidropped, checking owned NFTs");
+    console.log("Aidropped to", wallet.address, "- checking owned NFTs...");
 
     setTimeout(function() {
         alchemy.nft.getNftsForOwner(wallet.address).then(console.log);
@@ -38,5 +38,10 @@ const runMain = async () => {
         process.exit(1);
     }
 }
+
+/*alchemy.nft.getNftsForOwner("0x31fCCb1B62f68Af0a15AC5020Ea1a95C6A35cA22")
+    .then(nfts => {
+        console.log(nfts.ownedNfts);
+    });*/
 
 runMain();

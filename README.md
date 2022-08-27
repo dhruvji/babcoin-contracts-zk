@@ -9,7 +9,7 @@ npx hardhat node
 node scripts/sample-script.js
 npx hardhat help
 
-npx hardhat run scripts/test.js
-npx hardhat run scripts/deploy.js --network mumbai
-npx hardhat run scripts/deploy.js --network polygon
+npx hardhat run scripts/testFunctions.js
+npx hardhat run scripts/deployMumbai.js --network mumbai
+npx hardhat run scripts/deployPolygon.js --network polygon
 ```

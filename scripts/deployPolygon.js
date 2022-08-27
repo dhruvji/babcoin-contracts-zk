@@ -1,4 +1,4 @@
-const superAdmin = "0xbab0BAe604066BFd4e536Cc1CddfA14D46790E1f";
+const superAdmin = "0xa7e719109C711CFFb7AA7739BC23c4C7546521e8";
 const babCoinURI = "https://babcoin-backend.herokuapp.com/v1/event/nft/{id}";
 
 const main = async () => {
