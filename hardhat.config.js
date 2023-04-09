@@ -11,21 +11,27 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 });
 
 module.exports = {
-  solidity: "0.8.10",
+  solidity: {
+    compilers: [
+      {
+        version: "0.8.0"
+      },
+      {
+        version: "0.8.4"
+      },
+      {
+        version: "0.8.19"
+      },
+      {
+        version: "^0.8.19"
+      }
+    ]
+  },
+
   networks: {
     mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.MUMBAI_ALCHEMY_KEY}`,
-      accounts: [process.env.TEST_PRIVATE_KEY]
-    },
-    polygon: {
-      url: `https://polygon-mainnet.g.alchemy.com/v2/${process.env.POLYGON_ALCHEMY_KEY}`,
-      accounts: [process.env.DEPLOY_PRIVATE_KEY]
+      url: `https://polygon-mumbai.g.alchemy.com/v2/`,
+      accounts: [""]
     }
-  },
-  gasReporter: {
-    enabled: (process.env.REPORT_GAS) ? true : false,
-    coinmarketcap: process.env.COINMARKETCAP_KEY,
-    token: "MATIC",
-    currency: "USD"
   }
 };

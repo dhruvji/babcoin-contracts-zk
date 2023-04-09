@@ -1,3 +1,5 @@
+const { ethers } = require("hardhat");
+
 const babCoinURI = "TEMPORARY URL EXTENDED LENGTH";
 
 const main = async () => {

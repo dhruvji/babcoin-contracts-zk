@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity 0.8.4;
+pragma solidity 0.8.19;
 
 /// @title Semaphore interface.
 /// @dev Interface of a Semaphore contract.
@@ -27,7 +27,11 @@ interface ISemaphore {
     /// @param groupId: Id of the group.
     /// @param oldAdmin: Old admin of the group.
     /// @param newAdmin: New admin of the group.
-    event GroupAdminUpdated(uint256 indexed groupId, address indexed oldAdmin, address indexed newAdmin);
+    event GroupAdminUpdated(
+        uint256 indexed groupId,
+        address indexed oldAdmin,
+        address indexed newAdmin
+    );
 
     /// @dev Emitted when a Semaphore proof is verified.
     /// @param groupId: Id of the group.

@@ -1,20 +1,18 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.7.0) (token/ERC1155/ERC1155.sol)
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.19;
 
 import "./IERC1155.sol";
 import "./IERC1155Receiver.sol";
 import "./IERC1155MetadataURI.sol";
 import "./Address.sol";
-import "./Context.sol";
 import "./ERC165.sol";
 import "./voting/interfaces/IPrivPoll.sol";
 import "./voting/interfaces/ISemaphore.sol";
 import "./voting/interfaces/IVerifier.sol";
 import "./voting/base/SemaphoreCore.sol";
 import "./voting/base/SemaphoreGroups.sol";
-import "./voting/base/SemaphoreCore.sol";
 
 /**
  * @dev Implementation of the basic standard multi-token.
@@ -48,7 +46,7 @@ contract BabCoinContract is
 
     address[] private admins;
     address private superAdmin;
-    
+
     mapping(uint256 => IVerifier) internal verifiers;
 
     mapping(uint256 => Poll) internal polls;
@@ -79,14 +77,20 @@ contract BabCoinContract is
     /**
      * @dev See {_setURI}.
      */
-    constructor(string memory uri_, address superAdmin_, Verifier[] memory _verifiers {
+    constructor(
+        string memory uri_,
+        address superAdmin_,
+        Verifier[] memory _verifiers
+    ) {
         _uri = uri_;
         superAdmin = superAdmin_;
         _transferAllowed = false;
         _burnAllowed = false;
 
         for (uint8 i = 0; i < _verifiers.length; ) {
-            verifiers[_verifiers[i].merkleTreeDepth] = IVerifier(_verifiers[i].contractAddress);
+            verifiers[_verifiers[i].merkleTreeDepth] = IVerifier(
+                _verifiers[i].contractAddress
+            );
 
             unchecked {
                 ++i;
@@ -707,7 +711,7 @@ contract BabCoinContract is
         return array;
     }
 
-        modifier onlyCoordinator(uint256 pollId) {
+    modifier onlyCoordinator(uint256 pollId) {
         if (polls[pollId].coordinator != _msgSender()) {
             revert Semaphore__CallerIsNotThePollCoordinator();
         }
@@ -759,7 +763,14 @@ contract BabCoinContract is
 
         IVerifier verifier = verifiers[merkleTreeDepth];
 
-        _verifyProof(vote, merkleTreeRoot, nullifierHash, pollId, proof, verifier);
+        _verifyProof(
+            vote,
+            merkleTreeRoot,
+            nullifierHash,
+            pollId,
+            proof,
+            verifier
+        );
 
         nullifierHashes[nullifierHash] = true;
 
@@ -773,7 +784,9 @@ contract BabCoinContract is
     }
 
     /// @dev See {ISemaphoreVoting-publishDecryptionKey}.
-    function endPoll(uint256 pollId) public override onlyCoordinator(pollId) returns (bool) {
+    function endPoll(
+        uint256 pollId
+    ) public override onlyCoordinator(pollId) returns (bool) {
         if (polls[pollId].state != PollState.Ongoing) {
             revert Semaphore__PollIsNotOngoing();
         }
@@ -785,7 +798,9 @@ contract BabCoinContract is
         return polls[pollId].yesVotes > polls[pollId].noVotes;
     }
 
-    function getPollState(uint256 pollId) public view returns (uint256, uint256, string memory) {
+    function getPollState(
+        uint256 pollId
+    ) public view returns (uint256, uint256, string memory) {
         Poll memory poll = polls[pollId];
 
         if (poll.state == PollState.Ongoing) {

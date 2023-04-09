@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "SemaphoreCore",
+  "sourceName": "contracts/voting/base/SemaphoreCore.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "nullifierHash",
+          "type": "uint256"
+        }
+      ],
+      "name": "NullifierHashAdded",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220f33dabe93dd3e7594f8e30186ca7392c471c29a8a7ca103d13f9ebd8ecf9bfc164736f6c63430008130033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220f33dabe93dd3e7594f8e30186ca7392c471c29a8a7ca103d13f9ebd8ecf9bfc164736f6c63430008130033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
