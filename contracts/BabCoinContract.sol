@@ -9,6 +9,12 @@ import "./IERC1155MetadataURI.sol";
 import "./Address.sol";
 import "./Context.sol";
 import "./ERC165.sol";
+import "./voting/interfaces/IPrivPoll.sol";
+import "./voting/interfaces/ISemaphore.sol";
+import "./voting/interfaces/IVerifier.sol";
+import "./voting/base/SemaphoreCore.sol";
+import "./voting/base/SemaphoreGroups.sol";
+import "./voting/base/SemaphoreCore.sol";
 
 /**
  * @dev Implementation of the basic standard multi-token.
@@ -17,7 +23,15 @@ import "./ERC165.sol";
  *
  * _Available since v3.1._
  */
-contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
+contract BabCoinContract is
+    Context,
+    ERC165,
+    IERC1155,
+    IERC1155MetadataURI,
+    IPrivPoll,
+    SemaphoreCore,
+    SemaphoreGroups
+{
     using Address for address;
 
     // Mapping from token ID to account balances
@@ -34,6 +48,12 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
     address[] private admins;
     address private superAdmin;
+    
+    mapping(uint256 => IVerifier) internal verifiers;
+
+    mapping(uint256 => Poll) internal polls;
+
+    mapping(uint256 => bool) internal nullifierHashes;
 
     modifier onlySuperAdmin() {
         //require(true);
@@ -59,14 +79,22 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /**
      * @dev See {_setURI}.
      */
-    constructor(string memory uri_, address superAdmin_) {
+    constructor(string memory uri_, address superAdmin_, Verifier[] memory _verifiers {
         _uri = uri_;
         superAdmin = superAdmin_;
         _transferAllowed = false;
         _burnAllowed = false;
+
+        for (uint8 i = 0; i < _verifiers.length; ) {
+            verifiers[_verifiers[i].merkleTreeDepth] = IVerifier(_verifiers[i].contractAddress);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
-    function getSuperAdmin() public view returns(address) {
+    function getSuperAdmin() public view returns (address) {
         return superAdmin;
     }
 
@@ -74,7 +102,7 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         superAdmin = newSuperAdmin;
     }
 
-    function getAdmins() public view returns(address[] memory) {
+    function getAdmins() public view returns (address[] memory) {
         return admins;
     }
 
@@ -107,18 +135,20 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         _burnAllowed = status;
     }
 
-    function getTransfer() public view returns(bool) {
+    function getTransfer() public view returns (bool) {
         return _transferAllowed;
     }
 
-    function getBurn() public view returns(bool) {
+    function getBurn() public view returns (bool) {
         return _burnAllowed;
     }
 
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IERC1155).interfaceId ||
             interfaceId == type(IERC1155MetadataURI).interfaceId ||
@@ -146,8 +176,14 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
      *
      * - `account` cannot be the zero address.
      */
-    function balanceOf(address account, uint256 id) public view virtual override returns (uint256) {
-        require(account != address(0), "ERC1155: address zero is not a valid owner");
+    function balanceOf(
+        address account,
+        uint256 id
+    ) public view virtual override returns (uint256) {
+        require(
+            account != address(0),
+            "ERC1155: address zero is not a valid owner"
+        );
         return _balances[id][account];
     }
 
@@ -158,14 +194,14 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
      *
      * - `accounts` and `ids` must have the same length.
      */
-    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
-        public
-        view
-        virtual
-        override
-        returns (uint256[] memory)
-    {
-        require(accounts.length == ids.length, "ERC1155: accounts and ids length mismatch");
+    function balanceOfBatch(
+        address[] memory accounts,
+        uint256[] memory ids
+    ) public view virtual override returns (uint256[] memory) {
+        require(
+            accounts.length == ids.length,
+            "ERC1155: accounts and ids length mismatch"
+        );
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
 
@@ -179,14 +215,20 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
     /**
      * @dev See {IERC1155-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved) public virtual override {
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) public virtual override {
         _setApprovalForAll(_msgSender(), operator, approved);
     }
 
     /**
      * @dev See {IERC1155-isApprovedForAll}.
      */
-    function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
+    function isApprovedForAll(
+        address account,
+        address operator
+    ) public view virtual override returns (bool) {
         return _operatorApprovals[account][operator];
     }
 
@@ -201,7 +243,8 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) public virtual override {
         require(
-            _transferAllowed && (from == _msgSender() || isApprovedForAll(from, _msgSender())),
+            _transferAllowed &&
+                (from == _msgSender() || isApprovedForAll(from, _msgSender())),
             "ERC1155: caller is not token owner nor approved"
         );
         _safeTransferFrom(from, to, id, amount, data);
@@ -218,7 +261,8 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) public virtual override {
         require(
-            _transferAllowed && (from == _msgSender() || isApprovedForAll(from, _msgSender())),
+            _transferAllowed &&
+                (from == _msgSender() || isApprovedForAll(from, _msgSender())),
             "ERC1155: caller is not token owner nor approved"
         );
         _safeBatchTransferFrom(from, to, ids, amounts, data);
@@ -253,7 +297,10 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         _beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         uint256 fromBalance = _balances[id][from];
-        require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
+        require(
+            fromBalance >= amount,
+            "ERC1155: insufficient balance for transfer"
+        );
         unchecked {
             _balances[id][from] = fromBalance - amount;
         }
@@ -284,7 +331,10 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) internal virtual {
         require(_transferAllowed, "Trasnfers disabled");
-        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(
+            ids.length == amounts.length,
+            "ERC1155: ids and amounts length mismatch"
+        );
         require(to != address(0), "ERC1155: transfer to the zero address");
 
         address operator = _msgSender();
@@ -296,7 +346,10 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
             uint256 amount = amounts[i];
 
             uint256 fromBalance = _balances[id][from];
-            require(fromBalance >= amount, "ERC1155: insufficient balance for transfer");
+            require(
+                fromBalance >= amount,
+                "ERC1155: insufficient balance for transfer"
+            );
             unchecked {
                 _balances[id][from] = fromBalance - amount;
             }
@@ -307,7 +360,14 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
         _afterTokenTransfer(operator, from, to, ids, amounts, data);
 
-        _doSafeBatchTransferAcceptanceCheck(operator, from, to, ids, amounts, data);
+        _doSafeBatchTransferAcceptanceCheck(
+            operator,
+            from,
+            to,
+            ids,
+            amounts,
+            data
+        );
     }
 
     /**
@@ -363,7 +423,14 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
         _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
 
-        _doSafeTransferAcceptanceCheck(operator, address(0), to, id, amount, data);
+        _doSafeTransferAcceptanceCheck(
+            operator,
+            address(0),
+            to,
+            id,
+            amount,
+            data
+        );
     }
 
     /**
@@ -384,7 +451,10 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) internal virtual onlyAdmin {
         require(to != address(0), "ERC1155: mint to the zero address");
-        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(
+            ids.length == amounts.length,
+            "ERC1155: ids and amounts length mismatch"
+        );
 
         address operator = _msgSender();
 
@@ -398,18 +468,24 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
 
         _afterTokenTransfer(operator, address(0), to, ids, amounts, data);
 
-        _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
+        _doSafeBatchTransferAcceptanceCheck(
+            operator,
+            address(0),
+            to,
+            ids,
+            amounts,
+            data
+        );
     }
 
     function airdrop(
-        address[] memory attendees, 
+        address[] memory attendees,
         uint256 id,
         uint256 amount,
         bytes memory data
     ) public onlyAdmin {
         uint256 size = attendees.length;
-        for(uint i = 0; i < size; i++)
-        {
+        for (uint i = 0; i < size; i++) {
             _mint(attendees[i], id, amount, data);
         }
     }
@@ -424,12 +500,8 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
      * - `from` cannot be the zero address.
      * - `from` must have at least `amount` tokens of token type `id`.
      */
-    function _burn(
-        address from,
-        uint256 id,
-        uint256 amount
-    ) internal virtual {
-        require(_burnAllowed, "Burning disabled"); 
+    function _burn(address from, uint256 id, uint256 amount) internal virtual {
+        require(_burnAllowed, "Burning disabled");
         require(from != address(0), "ERC1155: burn from the zero address");
 
         address operator = _msgSender();
@@ -463,9 +535,12 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         uint256[] memory ids,
         uint256[] memory amounts
     ) internal virtual {
-        require(_burnAllowed, "Burning disabled"); 
+        require(_burnAllowed, "Burning disabled");
         require(from != address(0), "ERC1155: burn from the zero address");
-        require(ids.length == amounts.length, "ERC1155: ids and amounts length mismatch");
+        require(
+            ids.length == amounts.length,
+            "ERC1155: ids and amounts length mismatch"
+        );
 
         address operator = _msgSender();
 
@@ -476,7 +551,10 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
             uint256 amount = amounts[i];
 
             uint256 fromBalance = _balances[id][from];
-            require(fromBalance >= amount, "ERC1155: burn amount exceeds balance");
+            require(
+                fromBalance >= amount,
+                "ERC1155: burn amount exceeds balance"
+            );
             unchecked {
                 _balances[id][from] = fromBalance - amount;
             }
@@ -569,7 +647,15 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
+            try
+                IERC1155Receiver(to).onERC1155Received(
+                    operator,
+                    from,
+                    id,
+                    amount,
+                    data
+                )
+            returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
@@ -590,10 +676,18 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         bytes memory data
     ) private {
         if (to.isContract()) {
-            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
-                bytes4 response
-            ) {
-                if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
+            try
+                IERC1155Receiver(to).onERC1155BatchReceived(
+                    operator,
+                    from,
+                    ids,
+                    amounts,
+                    data
+                )
+            returns (bytes4 response) {
+                if (
+                    response != IERC1155Receiver.onERC1155BatchReceived.selector
+                ) {
                     revert("ERC1155: ERC1155Receiver rejected tokens");
                 }
             } catch Error(string memory reason) {
@@ -604,10 +698,100 @@ contract BabCoinContract is Context, ERC165, IERC1155, IERC1155MetadataURI {
         }
     }
 
-    function _asSingletonArray(uint256 element) private pure returns (uint256[] memory) {
+    function _asSingletonArray(
+        uint256 element
+    ) private pure returns (uint256[] memory) {
         uint256[] memory array = new uint256[](1);
         array[0] = element;
 
         return array;
+    }
+
+        modifier onlyCoordinator(uint256 pollId) {
+        if (polls[pollId].coordinator != _msgSender()) {
+            revert Semaphore__CallerIsNotThePollCoordinator();
+        }
+
+        _;
+    }
+
+    /// @dev See {ISemaphoreVoting-createPoll}.
+    function createPoll(
+        uint256 pollId,
+        address coordinator,
+        uint256 merkleRoot,
+        uint256 merkleTreeDepth
+    ) public override {
+        if (address(verifiers[merkleTreeDepth]) == address(0)) {
+            revert Semaphore__MerkleTreeDepthIsNotSupported();
+        }
+
+        _createGroup(pollId, merkleRoot, merkleTreeDepth, 0);
+
+        Poll memory poll;
+
+        poll.coordinator = coordinator;
+
+        polls[pollId] = poll;
+
+        emit PollCreated(pollId, coordinator);
+    }
+
+    /// @dev See {ISemaphoreVoting-castVote}.
+    function castVote(
+        bytes32 vote,
+        uint256 nullifierHash,
+        uint256 pollId,
+        uint256[8] calldata proof
+    ) public override {
+        Poll memory poll = polls[pollId];
+
+        if (poll.state != PollState.Ongoing) {
+            revert Semaphore__PollIsNotOngoing();
+        }
+
+        if (nullifierHashes[nullifierHash]) {
+            revert Semaphore__YouAreUsingTheSameNillifierTwice();
+        }
+
+        uint256 merkleTreeDepth = getMerkleTreeDepth(pollId);
+        uint256 merkleTreeRoot = getMerkleTreeRoot(pollId);
+
+        IVerifier verifier = verifiers[merkleTreeDepth];
+
+        _verifyProof(vote, merkleTreeRoot, nullifierHash, pollId, proof, verifier);
+
+        nullifierHashes[nullifierHash] = true;
+
+        if (uint(vote) & 0xfff == 1) {
+            polls[pollId].yesVotes += 1;
+        } else {
+            polls[pollId].noVotes += 1;
+        }
+
+        emit VoteAdded(pollId, vote);
+    }
+
+    /// @dev See {ISemaphoreVoting-publishDecryptionKey}.
+    function endPoll(uint256 pollId) public override onlyCoordinator(pollId) returns (bool) {
+        if (polls[pollId].state != PollState.Ongoing) {
+            revert Semaphore__PollIsNotOngoing();
+        }
+
+        polls[pollId].state = PollState.Ended;
+
+        emit PollEnded(pollId, _msgSender());
+
+        return polls[pollId].yesVotes > polls[pollId].noVotes;
+    }
+
+    function getPollState(uint256 pollId) public view returns (uint256, uint256, string memory) {
+        Poll memory poll = polls[pollId];
+
+        if (poll.state == PollState.Ongoing) {
+            return (poll.yesVotes, poll.noVotes, "Ongoing");
+        } else {
+            return (poll.yesVotes, poll.noVotes, "Ended");
+        }
     }
 }
