@@ -10,22 +10,12 @@
     },
     {
       "inputs": [],
-      "name": "Semaphore__MerkleTreeDepthIsNotSupported",
-      "type": "error"
-    },
-    {
-      "inputs": [],
       "name": "Semaphore__MerkleTreeRootIsExpired",
       "type": "error"
     },
     {
       "inputs": [],
       "name": "Semaphore__MerkleTreeRootIsNotPartOfTheGroup",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "Semaphore__YouAreUsingTheSameNillifierTwice",
       "type": "error"
     },
     {

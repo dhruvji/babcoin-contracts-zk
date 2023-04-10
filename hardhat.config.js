@@ -30,8 +30,8 @@ module.exports = {
 
   networks: {
     mumbai: {
-      url: `https://polygon-mumbai.g.alchemy.com/v2/`,
-      accounts: [""]
+      url: `https://polygon-mumbai.g.alchemy.com/v2/iezDy_XrzTY8bQe-oS3mHubapFF7GN5K`,
+      accounts: ["66b8d716b5bba6e7c9a03716da65fbfe05aa87c7dce8a071c8cbdbf44a518077"]
     }
   }
 };

@@ -5,15 +5,10 @@ pragma solidity 0.8.19;
 /// @dev Interface of a Semaphore contract.
 interface ISemaphore {
     error Semaphore__CallerIsNotTheGroupAdmin();
-    error Semaphore__MerkleTreeDepthIsNotSupported();
     error Semaphore__MerkleTreeRootIsExpired();
     error Semaphore__MerkleTreeRootIsNotPartOfTheGroup();
-    error Semaphore__YouAreUsingTheSameNillifierTwice();
 
-    struct Verifier {
-        address contractAddress;
-        uint256 merkleTreeDepth;
-    }
+    
 
     /// It defines all the group parameters, in addition to those in the Merkle tree.
     struct Group {
