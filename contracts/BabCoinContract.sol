@@ -62,7 +62,7 @@ contract BabCoinContract is
         _;
     }
 
-        modifier onlyGroupAdmin(uint256 groupId) {
+    modifier onlyGroupAdmin(uint256 groupId) {
         if (groups[groupId].admin != _msgSender()) {
             revert Semaphore__CallerIsNotTheGroupAdmin();
         }
@@ -98,12 +98,22 @@ contract BabCoinContract is
      */
     constructor(
         string memory uri_,
-        address superAdmin_
+        address superAdmin_,
+        Verifier[] memory _verifiers
     ) {
         _uri = uri_;
         superAdmin = superAdmin_;
         _transferAllowed = false;
         _burnAllowed = false;
+        for (uint8 i = 0; i < _verifiers.length; ) {
+            verifiers[_verifiers[i].merkleTreeDepth] = IVerifier(
+                _verifiers[i].contractAddress
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     function getSuperAdmin() public view returns (address) {
@@ -818,7 +828,7 @@ contract BabCoinContract is
         }
     }
 
-        /// @dev See {ISemaphore-createGroup}.
+    /// @dev See {ISemaphore-createGroup}.
     function createGroup(
         uint256 groupId, // poll id
         uint256 merkleTreeRoot,
@@ -850,7 +860,8 @@ contract BabCoinContract is
         }
 
         if (merkleTreeRoot != currentMerkleTreeRoot) {
-            uint256 merkleRootCreationDate = groups[groupId].merkleRootCreationDates[merkleTreeRoot];
+            uint256 merkleRootCreationDate = groups[groupId]
+                .merkleRootCreationDates[merkleTreeRoot];
             uint256 merkleRootDuration = groups[groupId].merkleRootDuration;
 
             if (merkleRootCreationDate == 0) {
@@ -870,10 +881,23 @@ contract BabCoinContract is
 
         IVerifier verifier = verifiers[merkleTreeDepth];
 
-        _verifyProof(signal, merkleTreeRoot, nullifierHash, externalNullifier, proof, verifier);
+        _verifyProof(
+            signal,
+            merkleTreeRoot,
+            nullifierHash,
+            externalNullifier,
+            proof,
+            verifier
+        );
 
         groups[groupId].nullifierHashes[nullifierHash] = true;
 
-        emit ProofVerified(groupId, merkleTreeRoot, nullifierHash, externalNullifier, signal);
+        emit ProofVerified(
+            groupId,
+            merkleTreeRoot,
+            nullifierHash,
+            externalNullifier,
+            signal
+        );
     }
 }

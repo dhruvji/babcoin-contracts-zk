@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "circom:dev": "hardhat circom --deterministic --debug --verbose",
+    "circom:prod": "hardhat circom --verbose",
+    "test": "hardhat test"
   },
   "keywords": [],
   "author": "",
@@ -16,11 +18,17 @@
     "@zk-kit/incremental-merkle-tree.sol": "^1.5.0",
     "alchemy-sdk": "^2.0.2",
     "chai": "^4.3.6",
+    "circom": "^0.5.46",
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
     "dotenv": "^16.0.3",
     "ethereum-waffle": "^3.4.4",
     "ethers": "^5.7.2",
+    "hardhat-circom": "^3.3.2",
+    "hardhat-etherscan": "^1.0.1",
     "hardhat-gas-reporter": "^1.0.8",
     "poseidon-solidity": "^0.0.3",
+    "snarkjs": "^0.6.10",
     "truffle": "^5.8.1"
   },
   "devDependencies": {
